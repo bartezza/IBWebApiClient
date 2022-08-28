@@ -11,7 +11,7 @@ from datetime import datetime
 from websocket import create_connection
 import ssl
 from .models import (MarketDataFields, ContractInfo, OptionInfo, OptionStrikes, MarketHistory, OptionChain,
-                     market_data_fields_map, GatewayStatus)
+                     market_data_fields_map, GatewayStatus, Order)
 
 # ignore SSL verification warnings since we need to connect to the IB gateway,
 # which is using a self-signed certificate
@@ -122,6 +122,8 @@ class IBWebApiClient:
         """Ping gateway to keep connection alive."""
         ret = self.request("get", "tickle")
         status = GatewayStatus(**ret)
+        if not status.connected or not status.authenticated:
+            self._log.warning(status)
         self._log.debug(f"Connected = {status.connected}, authenticated = {status.authenticated}")
 
     def send_websocket(self, cmd: Union[List[str], str]):
@@ -433,9 +435,10 @@ class IBWebApiClient:
         ]
         return ret2
 
-    def get_orders(self):
+    def get_orders(self) -> List[Order]:
+        """Get open orders."""
         ret = self.request("get", "iserver/account/orders")
-        return ret
+        return [Order(**order) for order in ret["orders"]]
 
     def submit_order(self, orders: List[dict], account_id: Optional[str] = None):
         if account_id is None:
@@ -471,11 +474,11 @@ class IBWebApiClient:
             if "message" in item:
                 message = " ".join(item["message"]).replace("\n", " ").replace("  ", " ")
                 self._log.debug(f"Question submitting order: {message}")
-                reply_id = q["id"]
+                reply_id = item["id"]
                 data = {
                     "confirmed": True
                 }
-                ret2 = ibc.request("post", f"iserver/reply/{reply_id}", json=data)
+                ret2 = self.request("post", f"iserver/reply/{reply_id}", json=data)
                 # add new items to the list of items to check
                 ret += ret2
             elif "order_id" in item:

@@ -254,15 +254,15 @@ class GatewayStatus(BaseModel):
     authenticated: bool
     competing: bool
     connected: bool
-    message: str
+    message: Optional[str]
     MAC: str
-    serverName: str
-    serverVersion: str
+    serverName: Optional[str]
+    serverVersion: Optional[str]
 
     def __init__(self, **kwargs):
         # flat out unnecessary nested dict structure
         super().__init__(**kwargs,
-                         **kwargs["iserver"]["authStatus"]["serverInfo"],
+                         **kwargs["iserver"]["authStatus"].get("serverInfo", {}),
                          **kwargs["iserver"]["authStatus"])
 
 
@@ -345,3 +345,31 @@ class MarketHistory(BaseModel):
     timePeriod: str  # '2d',
     travelTime: int  # 564,
     volumeFactor: int  # 1
+
+
+class Order(BaseModel):
+    acct: str  # 'DUxxx',
+    bgColor: str  # '#000000',
+    cashCcy: str  # 'USD',
+    companyName: str  # 'APPLE INC',
+    conid: int  # 265598,
+    conidex: str  # '265598',
+    description1: str  # 'AAPL',
+    fgColor: str  # '#AFAFAF',
+    filledQuantity: float  # 0.0,
+    lastExecutionTime: str  # '220827093055',
+    lastExecutionTime_r: int  # 1661592655000,
+    listingExchange: str  # 'NASDAQ.NMS',
+    orderDesc: str  # 'Buy 1 Limit 100.00 GTC',
+    orderId: int  # 1083610844,
+    orderType: str  # 'Limit',
+    origOrderType: str  # 'LIMIT',
+    price: Optional[str]  # '100.00',
+    remainingQuantity: float  # 1.0,
+    secType: str  # 'STK',
+    side: str  # 'BUY',
+    sizeAndFills: str  # '0/1',
+    status: str  # 'Inactive',
+    supportsTaxOpt: str  # '1',
+    ticker: str  # 'AAPL',
+    timeInForce: str  # 'GTC'
