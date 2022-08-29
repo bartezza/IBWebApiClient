@@ -37,6 +37,7 @@ class IBWebApiClient:
     _session: requests.Session
     _use_ibeam: bool
     _user: dict
+    _accounts: dict
     _account_id: str
 
     def __init__(self, use_ibeam: bool = True, host: Optional[str] = None):
@@ -65,8 +66,13 @@ class IBWebApiClient:
                 return
             self._log.warning("Gateway ready")
         # get user
-        self.get_user()
-        # get accounts
+        self._user = self.get_user()
+        username = self._user["username"]
+        paper = self._user["ispaper"]
+        self._log.debug(f"Username = {username}, paper = {paper}")
+        # get accounts, necessary to initialize internal GW things I think
+        self._accounts = self.get_accounts()
+        # get portfolio accounts
         accounts = self.get_portfolio_accounts()
         # use the first one
         self._account_id = accounts[0]["accountId"]
@@ -145,19 +151,60 @@ class IBWebApiClient:
 
         ws.close()
 
-    def get_user(self):
-        self._user = self.request("get", "one/user")
-        username = self._user["username"]
-        paper = self._user["ispaper"]
-        print(f"Username = {username}, paper = {paper}")
+    def get_user(self) -> dict:
+        """
+        {'accts': {'DUxxx': {'clearingStatus': 'O',
+                                 'isFAClient': False,
+                                 'isFunded': True,
+                                 'openDate': 1573772400000,
+                                 'tradingPermissions': ['OPT',
+                                                        'FUT',
+                                                        'IOPT',
+                                                        'BILL',
+                                                        'WAR',
+                                                        'STK',
+                                                        'CASH',
+                                                        'BOND',
+                                                        'COMB']}},
+         'applicants': [{'businessType': 'INDEPENDENT',
+                         'entityId': 10xxx,
+                         'id': 50xxx,
+                         'legalCountry': {'alpha3': 'CHE', 'name': 'Switzerland'},
+                         'nlcode': 'en',
+                         'type': 'INDIVIDUAL'}],
+         'features': {'bond': True,
+                      'calendar': True,
+                      'env': 'PROD',
+                      'newMf': True,
+                      'optionChains': True,
+                      'realtime': True,
+                      'wlms': True},
+         'has2fa': False,
+         'islite': False,
+         'ispaper': True,
+         'props': {'isIBAMClient': False, 'readOnlySession': None},
+         'uar': {'accountDetails': True,
+                 'forum': True,
+                 'fyi': True,
+                 'messageCenter': True,
+                 'portfolioAnalyst': True,
+                 'recentTransactions': True,
+                 'tradingRestrictions': False,
+                 'tws': True,
+                 'userInfo': True,
+                 'voting': True},
+         'username': 'xxx',
+         'wbId': ''}
+        """
+        return self.request("get", "one/user")
 
     def get_accounts(self):
         """
-        {'accounts': ['DU1739556'],
-         'acctProps': {'DU1739556': {'hasChildAccounts': False,
+        {'accounts': ['DUxxx'],
+         'acctProps': {'DUxxx': {'hasChildAccounts': False,
                                      'supportsCashQty': True,
                                      'supportsFractions': False}},
-         'aliases': {'DU1739556': 'DU1739556'},
+         'aliases': {'DUxxx': 'DUxxx'},
          'allowFeatures': {'allowFXConv': True,
                            'allowFinancialLens': False,
                            'allowMTA': True,
@@ -187,7 +234,7 @@ class IBWebApiClient:
                           'WAR': ['*']},
          'groups': [],
          'profiles': [],
-         'selectedAccount': 'DU1739556',
+         'selectedAccount': 'DUxxx',
          'serverInfo': {'serverName': 'JifZ15032',
                         'serverVersion': 'Build 10.17.1r, Aug 22, 2022 2:57:24 PM'},
          'sessionId': '6305a5a8.0000002f'}
@@ -438,6 +485,10 @@ class IBWebApiClient:
     def get_orders(self) -> List[Order]:
         """Get open orders."""
         ret = self.request("get", "iserver/account/orders")
+        # sometimes it returns an empty array even if there are orders
+        if len(ret) == 0:
+            # retry once
+            ret = self.request("get", "iserver/account/orders")
         return [Order(**order) for order in ret["orders"]]
 
     def submit_order(self, orders: List[dict], account_id: Optional[str] = None):
