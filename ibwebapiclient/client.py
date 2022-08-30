@@ -71,11 +71,15 @@ class IBWebApiClient:
         paper = self._user["ispaper"]
         self._log.debug(f"Username = {username}, paper = {paper}")
         # get accounts, necessary to initialize internal GW things I think
-        self._accounts = self.get_accounts()
-        # get portfolio accounts
-        accounts = self.get_portfolio_accounts()
-        # use the first one
-        self._account_id = accounts[0]["accountId"]
+        try:
+            self._accounts = self.get_accounts()
+            # get portfolio accounts
+            accounts = self.get_portfolio_accounts()
+            # use the first one
+            self._account_id = accounts[0]["accountId"]
+        except requests.exceptions.HTTPError as exc:
+            # this can happen, if gateway is not connected yet
+            self._log.warning(str(exc))
 
     def log(self) -> logging.Logger:
         """Get access to internal logger instance."""
