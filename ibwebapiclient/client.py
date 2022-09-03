@@ -333,13 +333,17 @@ class IBWebApiClient:
         ret = self.request("get", f"iserver/contract/{conid}/info")
         return ContractInfo(**ret)
 
-    def get_options_info(self, conid: int, expiration: str, strike: float) -> List[OptionInfo]:
+    def get_options_info(self, conid: int, expiration: Optional[str], strike: Optional[float],
+                         month: Optional[str] = None) -> List[OptionInfo]:
         """Get list of option info.
 
-        NOTE: set strike = 0.0 to get all options.
+        NOTE: set strike = None or 0.0 to get all options.
         """
-        month = expiration_to_month(expiration)
-        params = {"conid": conid, "secType": "OPT", "month": month, "strike": strike}
+        params = {"conid": conid, "secType": "OPT"}
+        if expiration is not None:
+            month = expiration_to_month(expiration)
+        params["month"] = month
+        params["strike"] = strike or 0.0
         ret = self.request("get", "iserver/secdef/info", params=params)
 
         opts = [OptionInfo(**r) for r in ret if r["maturityDate"] == expiration]
