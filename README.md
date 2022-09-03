@@ -146,4 +146,7 @@ while True:
 
 ## References
 
- - [Official API documentation](https://www.interactivebrokers.com/api/doc.html)
+ - [Official Client Portal API documentation](https://interactivebrokers.github.io/cpwebapi/)
+ - [Where to download the Client Portal API gateway](https://www.interactivebrokers.com/en/index.php?f=5041)
+ - [Available endpoints](https://www.interactivebrokers.com/api/doc.html)
+ 
