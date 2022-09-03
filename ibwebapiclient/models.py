@@ -4,6 +4,55 @@ from typing import Optional, List, Dict
 from pydantic import BaseModel
 
 
+class AssetClass(Enum):
+    STK = "STK"
+    OPT = "OPT"
+
+
+class OrderStatus(Enum):
+    PRESUBMITTED = "PreSubmitted"
+    SUBMITTED = "Submitted"
+    FILLED = "Filled"
+    CANCELLED = "Cancelled"
+    INACTIVE = "Inactive"
+
+    @staticmethod
+    def is_open(value: str) -> bool:
+        return value in ("PreSubmitted", "Submitted")
+
+
+class OrderType(Enum):
+    LMT = "LMT"
+    MKT = "MKT"
+    STP = "STP"
+    STOP_LIMIT = "STOP_LIMIT"
+    MIDPRICE = "MIDPRICE"
+    TRAIL = "TRAIL"
+    TRAILLMT = "TRAILLMT"
+
+
+class OrderSide(Enum):
+    BUY = "BUY"
+    SELL = "SELL"
+
+    @staticmethod
+    def get_opposite(side: "OrderSide") -> "OrderSide":
+        if side == OrderSide.BUY:
+            return OrderSide.SELL
+        elif side == OrderSide.SELL:
+            return OrderSide.BUY
+        else:
+            raise ValueError(str(side))
+
+
+class OrderTIF(Enum):
+    GTC = "GTC"
+    OPG = "OPG"
+    DAY = "DAY"
+    IOC = "IOC"
+    CLOSE = "CLOSE"
+
+
 class MarketDataFields(Enum):
     """Represents the fields for the `MarketDataSnapshot` service.
 
@@ -270,11 +319,11 @@ class ContractInfo(BaseModel):
     cfi_code: str  # 'OCXXXS',
     symbol: str  # 'SPX',
     cusip: Optional[str]  # None,
-    expiry_full: str  # '20220822',
+    expiry_full: Optional[str]  # '20220822',
     con_id: int  # 577123126,
-    maturity_date: str  # '20220822',
+    maturity_date: Optional[str]  # '20220822',
     instrument_type: str  # 'OPT',
-    trading_class: str  # 'SPXW',
+    trading_class: Optional[str]  # 'SPXW',
     valid_exchanges: str  # 'SMART,CBOE',
     allow_sell_long: bool  # False,
     is_zero_commission_security: bool  # False,
@@ -282,14 +331,14 @@ class ContractInfo(BaseModel):
     contract_clarification_type: Optional[str]  # None,
     classifier: Optional[str]  # None,
     currency: str  # 'USD',
-    text: str  # "(SPXW) AUG 22 '22 4230 Call",
+    text: Optional[str]  # "(SPXW) AUG 22 '22 4230 Call",
     underlying_con_id: int  # 416904,
     r_t_h: bool  # True,
-    multiplier: str  # '100',
+    multiplier: Optional[str]  # '100',
     strike: Optional[str]  # '4230.0',
     right: Optional[str]  # 'CALL',
     underlying_issuer: Optional[str]  # None,
-    contract_month: str  # '202208',
+    contract_month: Optional[str]  # '202208',
     company_name: str  # 'S&P 500 Stock Index',
     smart_available: Optional[bool]  # True,
     exchange: str  # 'SMART'
@@ -359,7 +408,7 @@ class Order(BaseModel):
     filledQuantity: float  # 0.0,
     lastExecutionTime: str  # '220827093055',
     lastExecutionTime_r: int  # 1661592655000,
-    listingExchange: str  # 'NASDAQ.NMS',
+    listingExchange: Optional[str]  # 'NASDAQ.NMS',
     orderDesc: str  # 'Buy 1 Limit 100.00 GTC',
     orderId: int  # 1083610844,
     orderType: str  # 'Limit',
@@ -369,7 +418,61 @@ class Order(BaseModel):
     secType: str  # 'STK',
     side: str  # 'BUY',
     sizeAndFills: str  # '0/1',
-    status: str  # 'Inactive',
+    status: str  # see OrderStatus
     supportsTaxOpt: str  # '1',
     ticker: str  # 'AAPL',
     timeInForce: str  # 'GTC'
+
+    def is_open(self) -> bool:
+        return OrderStatus.is_open(self.status)
+
+
+class Position(BaseModel):
+    acctId: str  # 'U3409871',
+    assetClass: str  # 'OPT',
+    avgCost: float  # 185.36085,
+    avgPrice: float  # 1.8536085,
+    conExchMap: list  # [],
+    conid: int  # 581288360,
+    contractDesc: str  # 'SPX    AUG2022 4045 C [SPXW  220830C04045000 100]',
+    currency: str  # 'USD',
+    exchs: Optional[str]  # None,
+    exerciseStyle: Optional[str]  # None,
+    expiry: Optional[str]  # None,
+    mktPrice: float  # 0.47615925,
+    mktValue: float  # -47.62,
+    multiplier: Optional[float]  # None,
+    position: float  # -1.0,
+    putOrCall: Optional[str]  # None,
+    realizedPnl: float  # 0.0,
+    strike: float  # 0.0,
+    undConid: int  # 0,
+    unrealizedPnl: float  # 137.74
+
+
+class Trade(BaseModel):
+    account: str  # 'U3409871',
+    accountCode: str  # 'U3409871',
+    clearing_id: Optional[str]  # 'IB',
+    clearing_name: Optional[str]  # 'IB',
+    commission: Optional[str]  # '1.55',
+    company_name: str  # 'S&P 500 Stock Index',
+    conid: int  # 547639942,
+    conidEx: str  # '547639942',
+    contract_description_1: str  # 'SPX',
+    contract_description_2: Optional[str]  # "(SPXW) AUG 31 '22 4040 Call",
+    directed_exchange: str  # 'CBOE',
+    exchange: str  # 'CBOE',
+    execution_id: str  # '0000f711.630f3d2d.05.01',
+    liquidation_trade: str  # '0',
+    net_amount: float  # 5.0,
+    open_close: Optional[str]  # '???',
+    order_description: str  # 'Sold 1 @ 0.05 on CBOE',
+    price: str  # '0.05',
+    sec_type: str  # 'OPT',
+    side: str  # 'S',
+    size: float  # 1.0,
+    supports_tax_opt: str  # '1',
+    symbol: str  # 'SPX',
+    trade_time: str  # '20220831-19:03:55',
+    trade_time_r: int  # 1661972635000

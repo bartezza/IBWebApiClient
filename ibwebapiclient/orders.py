@@ -2,37 +2,7 @@
 from enum import Enum
 from typing import List, Optional
 from datetime import datetime
-
-
-class OrderType(Enum):
-    LMT = "LMT"
-    MKT = "MKT"
-    STP = "STP"
-    STOP_LIMIT = "STOP_LIMIT"
-    MIDPRICE = "MIDPRICE"
-    TRAIL = "TRAIL"
-    TRAILLMT = "TRAILLMT"
-
-
-class OrderSide(Enum):
-    BUY = "BUY"
-    SELL = "SELL"
-
-    @staticmethod
-    def get_opposite(side: "OrderSide") -> "OrderSide":
-        if side == OrderSide.BUY:
-            return OrderSide.SELL
-        elif side == OrderSide.SELL:
-            return OrderSide.BUY
-        else:
-            raise ValueError(str(side))
-
-
-class OrderTIF(Enum):
-    GTC = "GTC"
-    OPG = "OPG"
-    DAY = "DAY"
-    IOC = "IOC"
+from .models import OrderSide, OrderTIF
 
 
 def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int,

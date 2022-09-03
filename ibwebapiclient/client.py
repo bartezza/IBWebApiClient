@@ -11,7 +11,7 @@ from datetime import datetime
 from websocket import create_connection
 import ssl
 from .models import (MarketDataFields, ContractInfo, OptionInfo, OptionStrikes, MarketHistory, OptionChain,
-                     market_data_fields_map, GatewayStatus, Order)
+                     market_data_fields_map, GatewayStatus, Order, Position, Trade)
 
 # ignore SSL verification warnings since we need to connect to the IB gateway,
 # which is using a self-signed certificate
@@ -66,12 +66,12 @@ class IBWebApiClient:
                 return
             self._log.warning("Gateway ready")
         # get user
-        self._user = self.get_user()
-        username = self._user["username"]
-        paper = self._user["ispaper"]
-        self._log.debug(f"Username = {username}, paper = {paper}")
-        # get accounts, necessary to initialize internal GW things I think
         try:
+            self._user = self.get_user()
+            username = self._user["username"]
+            paper = self._user["ispaper"]
+            self._log.debug(f"Username = {username}, paper = {paper}")
+            # get accounts, necessary to initialize internal GW things I think
             self._accounts = self.get_accounts()
             # get portfolio accounts
             accounts = self.get_portfolio_accounts()
@@ -284,37 +284,18 @@ class IBWebApiClient:
         ret = self.request("get", "iserver/account/pnl/partitioned")
         return ret
 
-    def get_trades(self):
+    def get_trades(self) -> List[Trade]:
         ret = self.request("get", "iserver/account/trades")
-        return ret
+        if len(ret) == 0:
+            # retry
+            ret = self.request("get", "iserver/account/trades")
+        return [Trade(**t) for t in ret]
 
-    def get_positions(self, account_id: Optional[str] = None):
-        """
-        {'acctId': 'U3409871',
-          'conid': 577123157,
-          'contractDesc': 'SPX    AUG2022 4115 P [SPXW  220822P04115000 100]',
-          'position': -1.0,
-          'mktPrice': 1.22937835,
-          'mktValue': -122.94,
-          'currency': 'USD',
-          'avgCost': 100.36085,
-          'avgPrice': 1.0036085,
-          'realizedPnl': 0.0,
-          'unrealizedPnl': -22.58,
-          'exchs': None,
-          'expiry': None,
-          'putOrCall': None,
-          'multiplier': None,
-          'strike': 0.0,
-          'exerciseStyle': None,
-          'conExchMap': [],
-          'assetClass': 'OPT',
-          'undConid': 0},
-        """
+    def get_positions(self, account_id: Optional[str] = None) -> List[Position]:
         if account_id is None:
             account_id = self._account_id
         ret = self.request("get", f"portfolio/{account_id}/positions")
-        return ret
+        return [Position(**pos) for pos in ret]
 
     def search_futures(self, symbols: List[str]) -> dict:
         """Get list of futures from symbols with various maturity dates."""
