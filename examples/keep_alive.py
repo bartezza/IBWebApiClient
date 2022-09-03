@@ -20,4 +20,4 @@ while True:
         # log error but do not stop the loop
         ibc._log.error(str(exc))
     # wait before next ping
-    sleep(1)
+    sleep(10)
