@@ -1,4 +1,3 @@
-
 from ibwebapiclient import IBWebApiClient, init_logging
 
 # utility function to init colored logging
@@ -21,6 +20,9 @@ period = "30d"
 bar = "5min"
 exchange = None
 outside_rth = True
-df = ibc.get_market_history_df(conid=conid, period=period, bar=bar,
-                               exchange=exchange, outside_rth=outside_rth)
+df = ibc.get_market_history_df(conid=conid,
+                               period=period,
+                               bar=bar,
+                               exchange=exchange,
+                               outside_rth=outside_rth)
 print(df.head())

@@ -1,6 +1,6 @@
-
-from pprint import pprint
 import time
+from pprint import pprint
+
 from ibwebapiclient import IBWebApiClient, MarketDataFields, init_logging
 
 # utility function to init colored logging
@@ -25,8 +25,7 @@ print(f"{con_info.con_id} - {con_info.symbol} - {con_info.company_name}")
 fields = ibc.get_market_data_fields(def_fields="STK")
 # add some more fields
 fields += [
-    MarketDataFields.EMAOneHundred.value,
-    MarketDataFields.EMATwoHundred.value
+    MarketDataFields.EMAOneHundred.value, MarketDataFields.EMATwoHundred.value
 ]
 # subscribe to market data feed, with the given fields
 ibc.subscribe_market_data(conid=conid, fields=fields)

@@ -1,7 +1,8 @@
-
-from pprint import pprint
 import time
-from ibwebapiclient import IBWebApiClient, init_logging, build_bracket_order, OrderSide
+from pprint import pprint
+
+from ibwebapiclient import (IBWebApiClient, OrderSide, build_bracket_order,
+                            init_logging)
 
 # utility function to init colored logging
 init_logging()
@@ -23,8 +24,12 @@ price = 50.0
 quantity = 1
 price_profit = 90.0
 price_loss = 20.0
-orders = build_bracket_order(conid=conid, side=OrderSide.BUY, price=price, quantity=quantity,
-                             price_profit=price_profit, price_loss=price_loss)
+orders = build_bracket_order(conid=conid,
+                             side=OrderSide.BUY,
+                             price=price,
+                             quantity=quantity,
+                             price_profit=price_profit,
+                             price_loss=price_loss)
 
 # submit order
 ret = ibc.submit_order(orders=orders)
@@ -36,4 +41,5 @@ time.sleep(2)
 orders = ibc.get_orders()
 print(f"{len(orders)} orders:")
 for order in orders:
-    print(f" - {order.ticker} {order.orderDesc}, {order.lastExecutionTime}, {order.status}")
+    print(f" - {order.ticker} {order.orderDesc}, {order.lastExecutionTime},"
+          f" {order.status}")

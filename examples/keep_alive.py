@@ -1,6 +1,7 @@
+from time import sleep
 
 import requests
-from time import sleep
+
 from ibwebapiclient import IBWebApiClient, init_logging
 
 # utility function to init colored logging

@@ -1,6 +1,6 @@
-
-from pprint import pprint
 from datetime import datetime
+from pprint import pprint
+
 from ibwebapiclient import IBWebApiClient, init_logging
 
 # utility function to init colored logging
@@ -31,7 +31,10 @@ strikes = ibc.get_option_strikes(conid=conid, expiration=expiration)
 pprint(strikes)
 
 # get last prices from market data
-data = ibc.get_market_history(conid=conid, period="2d", bar="1d", outside_rth=False)
+data = ibc.get_market_history(conid=conid,
+                              period="2d",
+                              bar="1d",
+                              outside_rth=False)
 dt = datetime.fromtimestamp(data.data[0]["t"] / 1000)
 last = data.data[0]["c"]
 print(f"dt = {dt}, last = {last}")

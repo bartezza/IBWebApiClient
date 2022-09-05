@@ -1,13 +1,17 @@
-
-from enum import Enum
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 from .models import OrderSide, OrderTIF
 
 
-def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int,
-                        price_profit: Optional[float], price_loss: Optional[float],
-                        coid: Optional[str] = None, outside_rth: bool = False,
+def build_bracket_order(conid: int,
+                        side: OrderSide,
+                        price: float,
+                        quantity: int,
+                        price_profit: Optional[float],
+                        price_loss: Optional[float],
+                        coid: Optional[str] = None,
+                        outside_rth: bool = False,
                         tif: OrderTIF = OrderTIF.DAY) -> List[dict]:
     """Build bracket order.
 
@@ -17,7 +21,8 @@ def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int
         price: Limit price at which to buy/sell.
         quantity: Quantity to buy/sell.
         price_profit: Take profit limit price (set to None to disable).
-        price_loss: Stop loss price at which a stop market order is issued (set to None to disable).
+        price_loss: Stop loss price at which a stop market order is issued
+            (set to None to disable).
         coid: Optional custom order ID.
         outside_rth: Outside regular trading hours?
         tif: Order time-in-force.
@@ -35,7 +40,7 @@ def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int
         "conid": conid,
         "cOID": coid,
         # "parentId"
-        "orderType": "LMT",  # "LMT", "MKT", "STP", "STOP_LIMIT", "MIDPRICE", "TRAIL", "TRAILLMT"
+        "orderType": "LMT",
         # "listingExchange"
         # "isSingleGroup"  # for OCA
         "outsideRTH": outside_rth,
@@ -62,7 +67,7 @@ def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int
 
         take_profit = order.copy()
         take_profit.update({
-            "orderType": "LMT",  # "LMT", "MKT", "STP", "STOP_LIMIT", "MIDPRICE", "TRAIL", "TRAILLMT"
+            "orderType": "LMT",
             "price": price_profit,
             "side": close_side.value,
             "referrer": "TakeProfitOrder",
@@ -80,7 +85,7 @@ def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int
 
         stop_loss = order.copy()
         stop_loss.update({
-            "orderType": "STP",  # "LMT", "MKT", "STP", "STOP_LIMIT", "MIDPRICE", "TRAIL", "TRAILLMT"
+            "orderType": "STP",
             "price": price_loss,
             "side": close_side.value,
             "referrer": "StopLossOrder",
@@ -91,9 +96,13 @@ def build_bracket_order(conid: int, side: OrderSide, price: float, quantity: int
     return orders
 
 
-def build_exit_strategy(conid: int, close_side: OrderSide, quantity: int,
-                        price_profit: Optional[float], price_loss: Optional[float],
-                        coid: Optional[str] = None, outside_rth: bool = False,
+def build_exit_strategy(conid: int,
+                        close_side: OrderSide,
+                        quantity: int,
+                        price_profit: Optional[float],
+                        price_loss: Optional[float],
+                        coid: Optional[str] = None,
+                        outside_rth: bool = False,
                         tif: OrderTIF = OrderTIF.DAY) -> List[dict]:
     """Build OCA orders with take profit and stop loss.
 
